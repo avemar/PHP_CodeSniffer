@@ -19,4 +19,3 @@ new_mode=$7
 
 diff --unchanged-line-format="" --old-line-format="" --new-line-format="%dn," $old_file $new_file
 exit 0
-
