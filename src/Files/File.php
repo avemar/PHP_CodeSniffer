@@ -133,6 +133,13 @@ class File
     protected $errorCount = 0;
 
     /**
+     * The total number of errors raised for diff lines.
+     *
+     * @var integer
+     */
+    protected $diffErrorCount = 0;
+
+    /**
      * The total number of warnings raised.
      *
      * @var integer
@@ -140,11 +147,25 @@ class File
     protected $warningCount = 0;
 
     /**
+     * The total number of warnings raised for diff lines.
+     *
+     * @var integer
+     */
+    protected $diffWarningCount = 0;
+
+    /**
      * The total number of errors and warnings that can be fixed.
      *
      * @var integer
      */
     protected $fixableCount = 0;
+
+    /**
+     * The total number of errors/warnings that can be fixed for diff lines.
+     *
+     * @var integer
+     */
+    protected $diffFixableCount = 0;
 
     /**
      * The total number of errors and warnings that were fixed.
@@ -197,6 +218,12 @@ class File
      */
     protected $configCache = array();
 
+    /**
+     * An array of lines to be highlighted
+     *
+     * @var array
+     */
+    protected $diffLines = array();
 
     /**
      * Constructs a file.
@@ -230,6 +257,7 @@ class File
         $this->configCache['warningSeverity'] = $this->config->warningSeverity;
         $this->configCache['recordErrors']    = $this->config->recordErrors;
         $this->configCache['ignorePatterns']  = $this->ruleset->getIgnorePatterns();
+        $this->configCache['diffLines']       = $this->config->diffLines;
 
     }//end __construct()
 
@@ -295,11 +323,14 @@ class File
             return;
         }
 
-        $this->errors       = array();
-        $this->warnings     = array();
-        $this->errorCount   = 0;
-        $this->warningCount = 0;
-        $this->fixableCount = 0;
+        $this->errors           = array();
+        $this->warnings         = array();
+        $this->errorCount       = 0;
+        $this->warningCount     = 0;
+        $this->fixableCount     = 0;
+        $this->diffErrorCount   = 0;
+        $this->diffWarningCount = 0;
+        $this->diffFixableCount = 0;
 
         $this->parse();
 
@@ -326,11 +357,14 @@ class File
                 if (strpos($token['content'], '@codingStandards') !== false) {
                     if (strpos($token['content'], '@codingStandardsIgnoreFile') !== false) {
                         // Ignoring the whole file, just a little late.
-                        $this->errors       = array();
-                        $this->warnings     = array();
-                        $this->errorCount   = 0;
-                        $this->warningCount = 0;
-                        $this->fixableCount = 0;
+                        $this->errors           = array();
+                        $this->warnings         = array();
+                        $this->errorCount       = 0;
+                        $this->warningCount     = 0;
+                        $this->fixableCount     = 0;
+                        $this->diffErrorCount   = 0;
+                        $this->diffWarningCount = 0;
+                        $this->diffFixableCount = 0;
                         return;
                     } else if (strpos($token['content'], '@codingStandardsChangeSetting') !== false) {
                         $start   = strpos($token['content'], '@codingStandardsChangeSetting');
@@ -847,10 +881,12 @@ class File
         if ($error === true) {
             $configSeverity = $this->configCache['errorSeverity'];
             $messageCount   = &$this->errorCount;
+            $diffCount      = &$this->diffErrorCount;
             $messages       = &$this->errors;
         } else {
             $configSeverity = $this->configCache['warningSeverity'];
             $messageCount   = &$this->warningCount;
+            $diffCount      = &$this->diffWarningCount;
             $messages       = &$this->warnings;
         }
 
@@ -933,13 +969,25 @@ class File
             $messages[$line][$column] = array();
         }
 
-        $messages[$line][$column][] = array(
-                                       'message'  => $message,
-                                       'source'   => $sniffCode,
-                                       'listener' => $this->activeListener,
-                                       'severity' => $severity,
-                                       'fixable'  => $fixable,
-                                      );
+        $messageData = array(
+            'message'    => $message,
+            'source'     => $sniffCode,
+            'listener' => $this->activeListener,
+            'severity'   => $severity,
+            'fixable'    => $fixable,
+            'isDiffLine' => false,
+        );
+
+        if (in_array($line, $this->configCache['diffLines'])) {
+            $messageData['isDiffLine'] = true;
+            $diffCount++;
+
+            if ($fixable === true) {
+                $this->diffFixableCount++;
+            }
+        }
+
+        $messages[$line][$column][] = $messageData;
 
         if (PHP_CODESNIFFER_VERBOSITY > 1
             && $this->fixer->enabled === true
@@ -994,6 +1042,18 @@ class File
 
 
     /**
+     * Returns the number of errors raised for diff lines.
+     *
+     * @return int
+     */
+    public function getDiffErrorCount()
+    {
+        return $this->diffErrorCount;
+
+    }//end getDiffErrorCount()
+
+
+    /**
      * Returns the number of warnings raised.
      *
      * @return int
@@ -1003,6 +1063,18 @@ class File
         return $this->warningCount;
 
     }//end getWarningCount()
+
+
+    /**
+     * Returns the number of warnings raised for diff lines.
+     *
+     * @return int
+     */
+    public function getDiffWarningCount()
+    {
+        return $this->diffWarningCount;
+
+    }//end getDiffWarningCount()
 
 
     /**
@@ -1027,6 +1099,18 @@ class File
         return $this->fixableCount;
 
     }//end getFixableCount()
+
+
+    /**
+     * Returns the number of fixable errors/warnings raised for diff lines.
+     *
+     * @return int
+     */
+    public function getDiffFixableCount()
+    {
+        return $this->diffFixableCount;
+
+    }//end getDiffFixableCount()
 
 
     /**
