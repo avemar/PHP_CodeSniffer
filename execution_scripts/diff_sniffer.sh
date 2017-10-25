@@ -39,7 +39,7 @@ executeDiffSniff() {
     diffLines=`GIT_EXTERNAL_DIFF=$gitExtDiff git diff $3 $2`
     case "$1" in
         php)
-            /home/vagrant/src/PHP_CodeSniffer/bin/phpcs --diff-lines=$diffLines --report=$reportType $colors $2
+            /home/vagrant/src/PHP_CodeSniffer/bin/phpcs --standard=Custom --diff-lines=$diffLines --report=$reportType $colors $2
             ;;
         js)
             eslint --diff-lines=diffLines $2
