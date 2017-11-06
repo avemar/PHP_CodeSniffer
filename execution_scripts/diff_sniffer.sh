@@ -7,13 +7,15 @@
 # -n Diff on not'staged files
 # -s Diff on staged files
 # -c Diff on specific commit files
+# -t Filetype to be linted
 #
 # If not -n nor -s:
 # $1 File to be checked
 
 myDir=`dirname $0`
 gitExtDiff=$myDir/git-external-diff
-reportType=DiffFull
+phpReportType=DiffFull
+jsReportType=diff-full
 colors=--colors
 notStaged=0
 staged=0
@@ -37,12 +39,18 @@ usage() {
 # $3 commit hex hash
 executeDiffSniff() {
     diffLines=`GIT_EXTERNAL_DIFF=$gitExtDiff git diff $3 $2`
+    diffLinesOption=''
+
+    if [[ ! -z $diffLines ]]; then
+        diffLinesOption='--diff-lines='$diffLines
+    fi
+
     case "$1" in
         php)
-            /home/vagrant/src/PHP_CodeSniffer/bin/phpcs --standard=Custom --diff-lines=$diffLines --report=$reportType $colors $2
+            phpcs --standard=Custom --diff-lines=$diffLines --report=$phpReportType $colors $2
             ;;
         js)
-            eslint --diff-lines=diffLines $2
+            eslint --config=/home/vagrant/src/eslint/custom_rules/.eslintrc.json --format=$jsReportType $diffLinesOption $2
             ;;
         *)
             echo "Invalid file type"
@@ -53,7 +61,8 @@ executeDiffSniff() {
 while getopts "dnsc:t:h" flag; do
     case "$flag" in
         d)
-            reportType=DiffOnly
+            phpReportType=DiffOnly
+            jsReportType=diff-only
             colors=--no-colors
             ;;
         n)
