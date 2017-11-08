@@ -54,7 +54,8 @@ executeDiffSniff() {
             ;;
         *)
             echo "Invalid file type"
-            exit 1
+            printf "\n"
+            ;;
     esac
 }
 
