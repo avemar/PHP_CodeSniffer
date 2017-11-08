@@ -6,11 +6,11 @@
 # -d Diff Only
 # -n Diff on not'staged files
 # -s Diff on staged files
-# -c Diff on specific commit files
+# -c Diff against specific commit hash
 # -t Filetype to be linted
 #
 # If not -n nor -s:
-# $1 File to be checked
+# $@ File(s) to be checked
 
 myDir=`dirname $0`
 gitExtDiff=$myDir/git-external-diff
@@ -102,13 +102,13 @@ if [[ $notStaged -eq 1 || $staged -eq 1 ]]; then
     exit 0
 fi
 
-if [[ $notStaged -eq 0 && $staged -eq 0 && -z $1 ]]; then
+if [[ $notStaged -eq 0 && $staged -eq 0 && -z $@ ]]; then
     echo "No file passed"
     exit 1
-else
-    file="$1"
 fi
 
-executeDiffSniff $fileType $file $commitHex
+for file in "$@"; do
+    executeDiffSniff $fileType $file $commitHex
+done
 
 exit 0
