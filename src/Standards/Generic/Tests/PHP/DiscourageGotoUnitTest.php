@@ -1,17 +1,17 @@
 <?php
 /**
- * Unit test class for the SideEffects sniff.
+ * Unit test class for the DiscourageGoto sniff.
  *
  * @author    Greg Sherwood <gsherwood@squiz.net>
- * @copyright 2006-2015 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2017 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  */
 
-namespace PHP_CodeSniffer\Standards\PSR1\Tests\Files;
+namespace PHP_CodeSniffer\Standards\Generic\Tests\PHP;
 
 use PHP_CodeSniffer\Tests\Standards\AbstractSniffUnitTest;
 
-class SideEffectsUnitTest extends AbstractSniffUnitTest
+class DiscourageGotoUnitTest extends AbstractSniffUnitTest
 {
 
 
@@ -21,11 +21,9 @@ class SideEffectsUnitTest extends AbstractSniffUnitTest
      * The key of the array should represent the line number and the value
      * should represent the number of errors that should occur on that line.
      *
-     * @param string $testFile The name of the file being tested.
-     *
      * @return array<int, int>
      */
-    public function getErrorList($testFile='')
+    public function getErrorList()
     {
         return array();
 
@@ -38,21 +36,16 @@ class SideEffectsUnitTest extends AbstractSniffUnitTest
      * The key of the array should represent the line number and the value
      * should represent the number of warnings that should occur on that line.
      *
-     * @param string $testFile The name of the file being tested.
-     *
      * @return array<int, int>
      */
-    public function getWarningList($testFile='')
+    public function getWarningList()
     {
-        switch ($testFile) {
-        case 'SideEffectsUnitTest.3.inc':
-        case 'SideEffectsUnitTest.4.inc':
-        case 'SideEffectsUnitTest.5.inc':
-        case 'SideEffectsUnitTest.10.inc':
-            return array(1 => 1);
-        default:
-            return array();
-        }//end switch
+        return array(
+                3  => 1,
+                6  => 1,
+                11 => 1,
+                16 => 1,
+               );
 
     }//end getWarningList()
 
