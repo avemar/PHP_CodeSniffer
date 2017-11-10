@@ -311,11 +311,16 @@ class Reporter
      */
     public function prepareFileReport(File $phpcsFile)
     {
+        $diffLines = [];
+
         $report = array(
                    'filename' => Common::stripBasepath($phpcsFile->getFilename(), $this->config->basepath),
                    'errors'   => $phpcsFile->getErrorCount(),
                    'warnings' => $phpcsFile->getWarningCount(),
                    'fixable'  => $phpcsFile->getFixableCount(),
+                   'diffErrors'   => $phpcsFile->getDiffErrorCount(),
+                   'diffWarnings' => $phpcsFile->getDiffWarningCount(),
+                   'diffFixable'  => $phpcsFile->getDiffFixableCount(),
                    'messages' => array(),
                   );
 
@@ -329,11 +334,12 @@ class Reporter
             $message .= 'This report will not show the correct information.';
             $report['messages'][1][1] = array(
                                          array(
-                                          'message'  => $message,
-                                          'source'   => 'Internal.RecordErrors',
-                                          'severity' => 5,
-                                          'fixable'  => false,
-                                          'type'     => 'ERROR',
+                                          'message'    => $message,
+                                          'source'     => 'Internal.RecordErrors',
+                                          'severity'   => 5,
+                                          'fixable'    => false,
+                                          'type'       => 'ERROR',
+                                          'isDiffLine' => false
                                          ),
                                         );
             return $report;
@@ -343,35 +349,53 @@ class Reporter
 
         // Merge errors and warnings.
         foreach ($phpcsFile->getErrors() as $line => $lineErrors) {
+            $isDiffLine = false;
+
             foreach ($lineErrors as $column => $colErrors) {
                 $newErrors = array();
                 foreach ($colErrors as $data) {
                     $newErrors[] = array(
-                                    'message'  => $data['message'],
-                                    'source'   => $data['source'],
-                                    'severity' => $data['severity'],
-                                    'fixable'  => $data['fixable'],
-                                    'type'     => 'ERROR',
+                                    'message'    => $data['message'],
+                                    'source'     => $data['source'],
+                                    'severity'   => $data['severity'],
+                                    'fixable'    => $data['fixable'],
+                                    'type'       => 'ERROR',
+                                    'isDiffLine' => $data['isDiffLine'],
                                    );
+
+                    if ($data['isDiffLine']) {
+                        $isDiffLine = true;
+                    }
                 }
 
                 $errors[$line][$column] = $newErrors;
+            }
+
+            if ($isDiffLine) {
+                $diffLines[$line] = true;
             }
 
             ksort($errors[$line]);
         }//end foreach
 
         foreach ($phpcsFile->getWarnings() as $line => $lineWarnings) {
+            $isDiffLine = false;
+
             foreach ($lineWarnings as $column => $colWarnings) {
                 $newWarnings = array();
                 foreach ($colWarnings as $data) {
                     $newWarnings[] = array(
-                                      'message'  => $data['message'],
-                                      'source'   => $data['source'],
-                                      'severity' => $data['severity'],
-                                      'fixable'  => $data['fixable'],
-                                      'type'     => 'WARNING',
-                                     );
+                                    'message'    => $data['message'],
+                                    'source'     => $data['source'],
+                                    'severity'   => $data['severity'],
+                                    'fixable'    => $data['fixable'],
+                                    'type'       => 'WARNING',
+                                    'isDiffLine' => $data['isDiffLine'],
+                                   );
+
+                    if ($data['isDiffLine']) {
+                        $isDiffLine = true;
+                    }
                 }
 
                 if (isset($errors[$line]) === false) {
@@ -388,11 +412,16 @@ class Reporter
                 }
             }//end foreach
 
+            if ($isDiffLine) {
+                $diffLines[$line] = true;
+            }
+
             ksort($errors[$line]);
         }//end foreach
 
         ksort($errors);
         $report['messages'] = $errors;
+        $report['diffLines'] = count($diffLines);
         return $report;
 
     }//end prepareFileReport()

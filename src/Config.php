@@ -133,6 +133,7 @@ class Config
                          'stdinContent'    => null,
                          'stdinPath'       => null,
                          'unknown'         => null,
+                         'diffLines'       => array(),
                         );
 
     /**
@@ -484,6 +485,7 @@ class Config
         $this->stdinContent    = null;
         $this->stdinPath       = null;
         $this->unknown         = array();
+        $this->diffLines       = array();
 
         $standard = self::getConfigData('default_standard');
         if ($standard !== null) {
@@ -1187,6 +1189,14 @@ class Config
 
                 $this->tabWidth = (int) substr($arg, 10);
                 $this->overriddenDefaults['tabWidth'] = true;
+            } else if (substr($arg, 0, 11) === 'diff-lines=') {
+                if (isset($this->overriddenDefaults['diffLines']) === true) {
+                    break;
+                }
+
+                $this->diffLines = $this->processDiffLines(
+                    substr($arg, 11)
+                );
             } else {
                 if ($this->dieOnUnknownArg === false) {
                     $eqPos = strpos($arg, '=');
@@ -1336,7 +1346,7 @@ class Config
         echo '  [--standard=<standard>] [--sniffs=<sniffs>] [--exclude=<sniffs>]'.PHP_EOL;
         echo '  [--encoding=<encoding>] [--parallel=<processes>] [--generator=<generator>]'.PHP_EOL;
         echo '  [--extensions=<extensions>] [--ignore=<patterns>] [--ignore-annotations]'.PHP_EOL;
-        echo '  [--stdin-path=<stdinPath>] [--file-list=<fileList>] <file> - ...'.PHP_EOL;
+        echo '  [--stdin-path=<stdinPath>] [--file-list=<fileList>] [--diff-lines=<diffLines>] <file> - ...'.PHP_EOL;
         echo PHP_EOL;
         echo ' -     Check STDIN instead of local files and directories'.PHP_EOL;
         echo ' -n    Do not print warnings (shortcut for --warning-severity=0)'.PHP_EOL;
@@ -1389,6 +1399,7 @@ class Config
         echo ' <standard>     The name or path of the coding standard to use'.PHP_EOL;
         echo ' <stdinPath>    If processing STDIN, the file path that STDIN will be processed as'.PHP_EOL;
         echo ' <tabWidth>     The number of spaces each tab represents'.PHP_EOL;
+        echo ' <diffLines>    A comma separated list of lines to be highlighted'.PHP_EOL;
 
     }//end printPHPCSUsage()
 
@@ -1666,5 +1677,23 @@ class Config
 
     }//end printConfigData()
 
+    /**
+     * Explode and validate diff-lines bash argument
+     *
+     * @param   string  $diffLines  Bash diff-lines argument
+     *
+     * @return  array               Exploded and validated argument
+     */
+    private function processDiffLines($diffLines)
+    {
+        $diffLinesArray = explode(',', $diffLines);
 
+        return array_filter(
+            $diffLinesArray,
+            function ($lineNumber) {
+                return ctype_digit($lineNumber);
+            }
+        );
+
+    }//end processDiffLines()
 }//end class

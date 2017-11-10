@@ -1,0 +1,2 @@
+alias bbphplint='/home/vagrant/code_sniffers/diff_sniffer.sh -t php'
+alias bbjslint='/home/vagrant/code_sniffers/diff_sniffer.sh -t js'
