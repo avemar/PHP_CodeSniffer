@@ -22,7 +22,7 @@ staged=0
 commitHex=''
 
 usage() {
-    echo "Usage: phplint [OPTION]... [FILE]..."
+    echo "Usage: bbphplint|bbjslint [OPTION]... [FILE]..."
     echo "  -d               show only modified/added lines"
     echo "  -n               perform sniffing on not staged files"
     echo "  -s               perform sniffing on staged files"
