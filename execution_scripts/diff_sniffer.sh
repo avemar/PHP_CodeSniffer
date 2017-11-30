@@ -7,6 +7,7 @@
 # -n Diff on not'staged files
 # -s Diff on staged files
 # -c Diff against specific commit hash
+# -l Diff against last commit of specific branch
 # -t Filetype to be linted
 #
 # If not -n nor -s:
@@ -20,6 +21,8 @@ colors=--colors
 notStaged=0
 staged=0
 commitHex=''
+jsBuildRegex=\\bclient\/build
+jsMinRegex=\.min\.js$
 
 usage() {
     echo "Usage: bbphplint|bbjslint [OPTION]... [FILE]..."
@@ -27,8 +30,10 @@ usage() {
     echo "  -n               perform sniffing on not staged files"
     echo "  -s               perform sniffing on staged files"
     echo "  -c <commit-hash> perform sniffing on resulting files from diff against a specific commit"
+    echo "  -l <branch-name> perform sniffing on resulting files from diff against last commit of specific branch"
     printf "\n"
-    echo "  -c and -d can be used in conjunction with any other option"
+    echo "  -c, -l and -d can be used in conjunction with any other option"
+    echo "  -n,-s and -c,-l options are mutually exclusive"
 
     exit 1
 }
@@ -50,7 +55,7 @@ executeDiffSniff() {
             phpcs --standard=Custom --diff-lines=$diffLines --report=$phpReportType $colors $2
             ;;
         js)
-            eslint --config=/home/vagrant/src/eslint/custom_rules/.eslintrc.json --format=$jsReportType $diffLinesOption $2
+            eslint --config=/home/aaversa/Vagrant3SyncedFolder/fe/eslint/custom_rules/.eslintrc.json --format=$jsReportType $diffLinesOption $2
             ;;
         *)
             echo "Invalid file type"
@@ -59,7 +64,7 @@ executeDiffSniff() {
     esac
 }
 
-while getopts "dnsc:t:h" flag; do
+while getopts "dnsc:l:t:h" flag; do
     case "$flag" in
         d)
             phpReportType=DiffOnly
@@ -76,6 +81,9 @@ while getopts "dnsc:t:h" flag; do
             ;;
         c)
             commitHex="$OPTARG"
+            ;;
+        l)
+            commitHex=`git log -n 1 --format=%H $OPTARG`
             ;;
         t)
             fileType="$OPTARG"
@@ -95,9 +103,15 @@ if [[ $notStaged -eq 1 || $staged -eq 1 ]]; then
     fi
 
     for file in $(git diff --name-only $gitDiff $commitHex); do
-        if [ ${file##*.} == $fileType ]
+        if [[ ${file##*.} == $fileType ]]
         then
-            executeDiffSniff $fileType $file $commitHex
+            if [[ $fileType == 'js' && ( $file =~ $jsMinRegex || $file =~ $jsBuildRegex ) ]]
+            then
+                #Don't execute linters on minified or built js files
+                :
+            else
+                executeDiffSniff $fileType $file $commitHex
+            fi
         fi
     done
     exit 0
