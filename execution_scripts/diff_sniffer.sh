@@ -55,7 +55,7 @@ executeDiffSniff() {
             phpcs --standard=Custom --diff-lines=$diffLines --report=$phpReportType $colors $2
             ;;
         js)
-            eslint --config=/home/aaversa/Vagrant3SyncedFolder/fe/eslint/custom_rules/.eslintrc.json --format=$jsReportType $diffLinesOption $2
+            eslint --config=/home/vagrant/src/eslint/custom_rules/.eslintrc.json --format=$jsReportType $diffLinesOption $2
             ;;
         *)
             echo "Invalid file type"
