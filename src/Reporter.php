@@ -72,14 +72,14 @@ class Reporter
      *
      * @var array
      */
-    private $reports = array();
+    private $reports = [];
 
     /**
      * A cache of opened temporary files.
      *
      * @var array
      */
-    private $tmpFiles = array();
+    private $tmpFiles = [];
 
 
     /**
@@ -123,10 +123,10 @@ class Reporter
                 throw new RuntimeException('Class "'.$reportClassName.'" must implement the "PHP_CodeSniffer\Report" interface.');
             }
 
-            $this->reports[$type] = array(
-                                     'output' => $output,
-                                     'class'  => $reportClass,
-                                    );
+            $this->reports[$type] = [
+                'output' => $output,
+                'class'  => $reportClass,
+            ];
 
             if ($output === null) {
                 // Using a temp file.
@@ -312,16 +312,16 @@ class Reporter
     {
         $diffLines = [];
 
-        $report = array(
-                   'filename' => Common::stripBasepath($phpcsFile->getFilename(), $this->config->basepath),
-                   'errors'   => $phpcsFile->getErrorCount(),
-                   'warnings' => $phpcsFile->getWarningCount(),
-                   'fixable'  => $phpcsFile->getFixableCount(),
-                   'diffErrors'   => $phpcsFile->getDiffErrorCount(),
-                   'diffWarnings' => $phpcsFile->getDiffWarningCount(),
-                   'diffFixable'  => $phpcsFile->getDiffFixableCount(),
-                   'messages' => array(),
-                  );
+        $report = [
+            'filename' => Common::stripBasepath($phpcsFile->getFilename(), $this->config->basepath),
+            'errors'   => $phpcsFile->getErrorCount(),
+            'warnings' => $phpcsFile->getWarningCount(),
+            'fixable'  => $phpcsFile->getFixableCount(),
+            'diffErrors'   => $phpcsFile->getDiffErrorCount(),
+            'diffWarnings' => $phpcsFile->getDiffWarningCount(),
+            'diffFixable'  => $phpcsFile->getDiffFixableCount(),
+            'messages' => [],
+        ];
 
         if ($report['errors'] === 0 && $report['warnings'] === 0) {
             // Prefect score!
@@ -331,36 +331,36 @@ class Reporter
         if ($this->config->recordErrors === false) {
             $message  = 'Errors are not being recorded but this report requires error messages. ';
             $message .= 'This report will not show the correct information.';
-            $report['messages'][1][1] = array(
-                                         array(
-                                          'message'    => $message,
-                                          'source'     => 'Internal.RecordErrors',
-                                          'severity'   => 5,
-                                          'fixable'    => false,
-                                          'type'       => 'ERROR',
-                                          'isDiffLine' => false
-                                         ),
-                                        );
+            $report['messages'][1][1] = [
+                [
+                    'message'    => $message,
+                    'source'     => 'Internal.RecordErrors',
+                    'severity'   => 5,
+                    'fixable'    => false,
+                    'type'       => 'ERROR',
+                    'isDiffLine' => false
+                ],
+            ];
             return $report;
         }
 
-        $errors = array();
+        $errors = [];
 
         // Merge errors and warnings.
         foreach ($phpcsFile->getErrors() as $line => $lineErrors) {
             $isDiffLine = false;
 
             foreach ($lineErrors as $column => $colErrors) {
-                $newErrors = array();
+                $newErrors = [];
                 foreach ($colErrors as $data) {
-                    $newErrors[] = array(
-                                    'message'    => $data['message'],
-                                    'source'     => $data['source'],
-                                    'severity'   => $data['severity'],
-                                    'fixable'    => $data['fixable'],
-                                    'type'       => 'ERROR',
-                                    'isDiffLine' => $data['isDiffLine'],
-                                   );
+                    $newErrors[] = [
+                        'message'    => $data['message'],
+                        'source'     => $data['source'],
+                        'severity'   => $data['severity'],
+                        'fixable'    => $data['fixable'],
+                        'type'       => 'ERROR',
+                        'isDiffLine' => $data['isDiffLine'],
+                    ];
 
                     if ($data['isDiffLine']) {
                         $isDiffLine = true;
@@ -381,16 +381,16 @@ class Reporter
             $isDiffLine = false;
 
             foreach ($lineWarnings as $column => $colWarnings) {
-                $newWarnings = array();
+                $newWarnings = [];
                 foreach ($colWarnings as $data) {
-                    $newWarnings[] = array(
-                                    'message'    => $data['message'],
-                                    'source'     => $data['source'],
-                                    'severity'   => $data['severity'],
-                                    'fixable'    => $data['fixable'],
-                                    'type'       => 'WARNING',
-                                    'isDiffLine' => $data['isDiffLine'],
-                                   );
+                    $newWarnings[] = [
+                        'message'    => $data['message'],
+                        'source'     => $data['source'],
+                        'severity'   => $data['severity'],
+                        'fixable'    => $data['fixable'],
+                        'type'       => 'WARNING',
+                        'isDiffLine' => $data['isDiffLine'],
+                    ];
 
                     if ($data['isDiffLine']) {
                         $isDiffLine = true;
@@ -398,7 +398,7 @@ class Reporter
                 }
 
                 if (isset($errors[$line]) === false) {
-                    $errors[$line] = array();
+                    $errors[$line] = [];
                 }
 
                 if (isset($errors[$line][$column]) === true) {

@@ -50,6 +50,15 @@ class Filter extends \RecursiveFilterIterator
      */
     protected $ignoreFilePatterns = null;
 
+    /**
+     * A list of file paths we've already accepted.
+     *
+     * Used to ensure we aren't following circular symlinks.
+     *
+     * @var array
+     */
+    protected $acceptedPaths = [];
+
 
     /**
      * Constructs a filter.
@@ -82,7 +91,18 @@ class Filter extends \RecursiveFilterIterator
     public function accept()
     {
         $filePath = $this->current();
+        $realPath = Util\Common::realpath($filePath);
 
+        if ($realPath !== false) {
+            // It's a real path somewhere, so record it
+            // to check for circular symlinks.
+            if (isset($this->acceptedPaths[$realPath]) === true) {
+                // We've been here before.
+                return false;
+            }
+        }
+
+        $filePath = $this->current();
         if (is_dir($filePath) === true) {
             if ($this->config->local === true) {
                 return false;
@@ -95,6 +115,7 @@ class Filter extends \RecursiveFilterIterator
             return false;
         }
 
+        $this->acceptedPaths[$realPath] = true;
         return true;
 
     }//end accept()
@@ -120,6 +141,7 @@ class Filter extends \RecursiveFilterIterator
         // Set the ignore patterns so we don't have to generate them again.
         $children->ignoreDirPatterns  = $this->ignoreDirPatterns;
         $children->ignoreFilePatterns = $this->ignoreFilePatterns;
+        $children->acceptedPaths      = $this->acceptedPaths;
         return $children;
 
     }//end getChildren()
@@ -147,7 +169,7 @@ class Filter extends \RecursiveFilterIterator
 
         // Checking multi-part file extensions, so need to create a
         // complete extension list and make sure one is allowed.
-        $extensions = array();
+        $extensions = [];
         array_shift($fileParts);
         foreach ($fileParts as $part) {
             $extensions[implode('.', $fileParts)] = 1;
@@ -174,8 +196,8 @@ class Filter extends \RecursiveFilterIterator
     protected function shouldIgnorePath($path)
     {
         if ($this->ignoreFilePatterns === null) {
-            $this->ignoreDirPatterns  = array();
-            $this->ignoreFilePatterns = array();
+            $this->ignoreDirPatterns  = [];
+            $this->ignoreFilePatterns = [];
 
             $ignorePatterns = array_merge($this->config->ignored, $this->ruleset->getIgnorePatterns());
             foreach ($ignorePatterns as $pattern => $type) {
@@ -213,10 +235,10 @@ class Filter extends \RecursiveFilterIterator
                 $type    = 'absolute';
             }
 
-            $replacements = array(
-                             '\\,' => ',',
-                             '*'   => '.*',
-                            );
+            $replacements = [
+                '\\,' => ',',
+                '*'   => '.*',
+            ];
 
             // We assume a / directory separator, as do the exclude rules
             // most developers write, so we need a special case for any system

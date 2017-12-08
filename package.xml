@@ -57,32 +57,89 @@ http://pear.php.net/dtd/package-2.0.xsd">
     -- Same rule applies for the new phpcs:ignore comment syntax
   - PSR1.Files.SideEffects now respects the new phpcs:disable comment syntax
     -- The sniff will no longer check any code that is between phpcs:disable and phpcs:enable comments
-    -- The sniff does not support the phpcs:ignore; you must wrap code structures with disable/enable comments
+    -- The sniff does not support phpcs:ignore; you must wrap code structures with disable/enable comments
     -- Previously, there was no way to have this sniff ignore parts of a file
+  - Fixed a problem where PHPCS would sometimes hang waiting for STDIN, or read incomplete versions of large files
+    -- Thanks to Arne Jørgensen for the patch
   - Array properties specified in ruleset files now have their keys and values trimmed
-    -- This saves having to do this in individual sniffs, and stops errors introduced by whitespace in rulesets
+    -- This saves having to do this in individual sniffs and stops errors introduced by whitespace in rulesets
     -- Thanks to Juliette Reinders Folmer for the patch
   - Added phpcs.xsd to allow validation of ruleset XML files
     -- Thanks to Renaat De Muynck for the contribution
   - File paths specified using --stdin-path can now point to fake file locations (request #1488)
     -- Previously, STDIN files using fake file paths were excluded from checking
+  - Setting an empty basepath (--basepath=) on the CLI will now clear a basepath set directly in a ruleset
+    -- Thanks to Xaver Loppenstedt for the patch
   - Ignore patterns are now checked on symlink target paths instead of symlink source paths
     -- Restores previous behaviour of this feature
-  - Added Generic.PHP.DiscourageGoto to warn about the use of the GOTO language construct
-    -- Thanks to Juliette Reinders Folmer for the contribution
-  - Squiz.Commenting.FunctionComment now supports nullable type hints
-  - Squiz.WhiteSpace.SemicolonSpacing now ignores semicolons used for empty statements inside FOR conditions
+  - Metrics were being double counted when multiple sniffs were recording the same metric
+  - Added support for bash process substitution
+    -- Thanks to Scott Dutton for the contribution
+  - Files included in the cache file code hash are now sorted to aid in cache file reuse across servers
+  - Windows BAT files can now be used outside a PEAR install
+    -- You must have the path to PHP set in your PATH environment variable
+    -- Thanks to Joris Debonnet for the patch
+  - The JS unsigned right shift assignment operator is now properly classified as an assignment operator
     -- Thanks to Juliette Reinders Folmer for the patch
   - The AbstractVariableSniff abstract sniff now supports anonymous classes and nested functions
     -- Also fixes an issue with Squiz.Scope.MemberVarScope where member vars of anonymous classes were not being checked
-  - Squiz.ControlStructures.ControlSignature now allows the number of spaces before the colon in alternative syntax to be set
+  - Added AbstractArraySniff to make it easier to create sniffs that check array formatting
+    -- Allows for checking of single and multi line arrays easily
+    -- Provides a parsed structure of the array including positions of keys, values, and double arrows
+  - Added Generic.Arrays.ArrayIndent to enforce a single tab stop indent for array keys in multi-line arrays
+   -- Also ensures the close brace is on a new line and indented to the same level as the original statement
+   -- Allows for the indent size to be set using an "indent" property of the sniff
+  - Added Generic.PHP.DiscourageGoto to warn about the use of the GOTO language construct
+    -- Thanks to Juliette Reinders Folmer for the contribution
+  - Generic.Debug.ClosureLinter was not running the gjslint command
+    -- Thanks to Michał Bundyra for the patch
+  - Generic.WhiteSpace.DisallowSpaceIndent now fixes space indents in multi-line block comments
+    -- Thanks to Juliette Reinders Folmer for the patch
+  - Generic.WhiteSpace.DisallowSpaceIndent now fixes mixed space/tab indents more accurately
+    -- Thanks to Juliette Reinders Folmer for the patch
+  - Generic.WhiteSpace.DisallowTabIndent now fixes tab indents in multi-line block comments
+    -- Thanks to Juliette Reinders Folmer for the patch
+  - PEAR.Functions.FunctionDeclaration no longer errors when a function declaration is the first content in a JS file
+    -- Thanks to Juliette Reinders Folmer for the patch
+  - PEAR.Functions.FunctionCallSignature now requires the function name to be indented to an exact tab stop
+    -- If the function name is not the start of the statement, the opening statement must be indented correctly instead
+    -- Added a new fixable error code PEAR.Functions.FunctionCallSignature.OpeningIndent for this error
+  - Squiz.Functions.FunctionDeclarationArgumentSpacing is no longer confused about comments in function declarations
+    -- Thanks to Juliette Reinders Folmer for the patch
+  - Squiz.PHP.NonExecutableCode error messages now indicate which line the code block ending is on
+    -- Makes it easier to identify where the code block exited or returned
+    -- Thanks to Juliette Reinders Folmer for the patch
+  - Squiz.Commenting.FunctionComment now supports nullable type hints
+  - Squiz.Commenting.FunctionCommentThrowTag no longer assigns throw tags inside anon classes to the enclosing function
+  - Squiz.WhiteSpace.SemicolonSpacing now ignores semicolons used for empty statements inside FOR conditions
+    -- Thanks to Juliette Reinders Folmer for the patch
+  - Squiz.ControlStructures.ControlSignature now allows configuring the number of spaces before the colon in alternative syntax
     -- Override the 'requiredSpacesBeforeColon' setting in a ruleset.xml file to change
     -- Default remains at 1
     -- Thanks to Nikola Kovacs for the patch
+  - The Squiz standard now ensures array keys are indented 4 spaces from the main statement
+    -- Previously, this standard aligned keys 1 space from the start of the array keyword
+  - The Squiz standard now ensures array end braces are aligned with the main statement
+    -- Previously, this standard aligned the close brace with the start of the array keyword
+  - The standard for PHP_CodeSniffer itself now enforces short array syntax
+  - The standard for PHP_CodeSniffer itself now uses the Generic.Arrays/ArrayIndent sniff rules
+  - Improved fixer conflicts and syntax error handling for a number of sniffs
+    -- Thanks to Juliette Reinders Folmer for the patch
+  - Fixed bug #1462 : Error processing cyrillic strings in Tokenizer
+  - Fixed bug #1573 : Squiz.WhiteSpace.LanguageConstructSpacing does not properly check for tabs and newlines
+    -- Thanks to Michał Bundyra for the patch
   - Fixed bug #1590 : InlineControlStructure CBF issue while adding braces to an if thats returning a nested function
   - Fixed bug #1718 : Unclosed strings at EOF sometimes tokenized as T_WHITESPACE by the JS tokenizer
   - Fixed bug #1731 : Directory exclusions do not work as expected when a single file name is passed to phpcs
+  - Fixed bug #1737 : Squiz.CSS.EmptyStyleDefinition sees comment as style definition and fails to report error
   - Fixed bug #1746 : Very large reports can sometimes become garbled when using the parallel option
+  - Fixed bug #1747 : Squiz.Scope.StaticThisUsage incorrectly looking inside closures
+  - Fixed bug #1757 : Unknown type hint "object" in Squiz.Commenting.FunctionComment
+  - Fixed bug #1758 : PHPCS gets stuck creating file list when processing circular symlinks
+  - Fixed bug #1761 : Generic.WhiteSpace.ScopeIndent error on multi-line function call with static closure argument
+  - Fixed bug #1762 : Generic.WhiteSpace.Disallow[Space/Tab]Indent not inspecting content before open tag
+    -- Thanks to Juliette Reinders Folmer for the patch
+  - Fixed bug #1769 : Custom "define" function triggers a warning about declaring new symbols
  </notes>
  <contents>
   <dir name="/">
@@ -187,6 +244,7 @@ http://pear.php.net/dtd/package-2.0.xsd">
      <file baseinstalldir="PHP/CodeSniffer" name="Xml.php" role="php" />
     </dir>
     <dir name="Sniffs">
+     <file baseinstalldir="PHP/CodeSniffer" name="AbstractArraySniff.php" role="php" />
      <file baseinstalldir="PHP/CodeSniffer" name="AbstractPatternSniff.php" role="php" />
      <file baseinstalldir="PHP/CodeSniffer" name="AbstractScopeSniff.php" role="php" />
      <file baseinstalldir="PHP/CodeSniffer" name="AbstractVariableSniff.php" role="php" />
@@ -285,6 +343,7 @@ http://pear.php.net/dtd/package-2.0.xsd">
       </dir>
       <dir name="Sniffs">
        <dir name="Arrays">
+        <file baseinstalldir="PHP/CodeSniffer" name="ArrayIndentSniff.php" role="php" />
         <file baseinstalldir="PHP/CodeSniffer" name="DisallowLongArraySyntaxSniff.php" role="php" />
         <file baseinstalldir="PHP/CodeSniffer" name="DisallowShortArraySyntaxSniff.php" role="php" />
        </dir>
@@ -382,8 +441,13 @@ http://pear.php.net/dtd/package-2.0.xsd">
       </dir>
       <dir name="Tests">
        <dir name="Arrays">
-        <file baseinstalldir="PHP/CodeSniffer" name="DisallowLongArraySyntaxUnitTest.inc" role="test" />
-        <file baseinstalldir="PHP/CodeSniffer" name="DisallowLongArraySyntaxUnitTest.inc.fixed" role="test" />
+        <file baseinstalldir="PHP/CodeSniffer" name="ArrayIndentUnitTest.inc" role="test" />
+        <file baseinstalldir="PHP/CodeSniffer" name="ArrayIndentUnitTest.inc.fixed" role="test" />
+        <file baseinstalldir="PHP/CodeSniffer" name="ArrayIndentUnitTest.php" role="test" />
+        <file baseinstalldir="PHP/CodeSniffer" name="DisallowLongArraySyntaxUnitTest.1.inc" role="test" />
+        <file baseinstalldir="PHP/CodeSniffer" name="DisallowLongArraySyntaxUnitTest.1.inc.fixed" role="test" />
+        <file baseinstalldir="PHP/CodeSniffer" name="DisallowLongArraySyntaxUnitTest.2.inc" role="test" />
+        <file baseinstalldir="PHP/CodeSniffer" name="DisallowLongArraySyntaxUnitTest.2.inc.fixed" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="DisallowLongArraySyntaxUnitTest.php" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="DisallowShortArraySyntaxUnitTest.inc" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="DisallowShortArraySyntaxUnitTest.inc.fixed" role="test" />
@@ -590,8 +654,10 @@ http://pear.php.net/dtd/package-2.0.xsd">
        <dir name="WhiteSpace">
         <file baseinstalldir="PHP/CodeSniffer" name="DisallowSpaceIndentUnitTest.css" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="DisallowSpaceIndentUnitTest.css.fixed" role="test" />
-        <file baseinstalldir="PHP/CodeSniffer" name="DisallowSpaceIndentUnitTest.inc" role="test" />
-        <file baseinstalldir="PHP/CodeSniffer" name="DisallowSpaceIndentUnitTest.inc.fixed" role="test" />
+        <file baseinstalldir="PHP/CodeSniffer" name="DisallowSpaceIndentUnitTest.1.inc" role="test" />
+        <file baseinstalldir="PHP/CodeSniffer" name="DisallowSpaceIndentUnitTest.1.inc.fixed" role="test" />
+        <file baseinstalldir="PHP/CodeSniffer" name="DisallowSpaceIndentUnitTest.2.inc" role="test" />
+        <file baseinstalldir="PHP/CodeSniffer" name="DisallowSpaceIndentUnitTest.2.inc.fixed" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="DisallowSpaceIndentUnitTest.js" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="DisallowSpaceIndentUnitTest.js.fixed" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="DisallowSpaceIndentUnitTest.php" role="test" />
@@ -1236,7 +1302,9 @@ http://pear.php.net/dtd/package-2.0.xsd">
         <file baseinstalldir="PHP/CodeSniffer" name="LongConditionClosingCommentUnitTest.js" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="LongConditionClosingCommentUnitTest.php" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="PostStatementCommentUnitTest.inc" role="test" />
+        <file baseinstalldir="PHP/CodeSniffer" name="PostStatementCommentUnitTest.inc.fixed" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="PostStatementCommentUnitTest.js" role="test" />
+        <file baseinstalldir="PHP/CodeSniffer" name="PostStatementCommentUnitTest.js.fixed" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="PostStatementCommentUnitTest.php" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="VariableCommentUnitTest.inc" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="VariableCommentUnitTest.inc.fixed" role="test" />
@@ -1273,6 +1341,7 @@ http://pear.php.net/dtd/package-2.0.xsd">
         <file baseinstalldir="PHP/CodeSniffer" name="ClassDefinitionOpeningBraceSpaceUnitTest.css" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="ClassDefinitionOpeningBraceSpaceUnitTest.php" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="ColonSpacingUnitTest.css" role="test" />
+        <file baseinstalldir="PHP/CodeSniffer" name="ColonSpacingUnitTest.css.fixed" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="ColonSpacingUnitTest.php" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="ColourDefinitionUnitTest.css" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="ColourDefinitionUnitTest.php" role="test" />
@@ -1337,7 +1406,9 @@ http://pear.php.net/dtd/package-2.0.xsd">
         <file baseinstalldir="PHP/CodeSniffer" name="LowercaseFunctionKeywordsUnitTest.inc" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="LowercaseFunctionKeywordsUnitTest.php" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="MultiLineFunctionDeclarationUnitTest.inc" role="test" />
+        <file baseinstalldir="PHP/CodeSniffer" name="MultiLineFunctionDeclarationUnitTest.inc.fixed" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="MultiLineFunctionDeclarationUnitTest.js" role="test" />
+        <file baseinstalldir="PHP/CodeSniffer" name="MultiLineFunctionDeclarationUnitTest.js.fixed" role="test" />
         <file baseinstalldir="PHP/CodeSniffer" name="MultiLineFunctionDeclarationUnitTest.php" role="test" />
        </dir>
        <dir name="NamingConventions">

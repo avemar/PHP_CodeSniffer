@@ -27,28 +27,28 @@ abstract class Tokenizer
      *
      * @var string
      */
-    protected $eolChar = array();
+    protected $eolChar = [];
 
     /**
      * A token-based representation of the content.
      *
      * @var array
      */
-    protected $tokens = array();
+    protected $tokens = [];
 
     /**
      * Known lengths of tokens.
      *
      * @var array<int, int>
      */
-    public $knownLengths = array();
+    public $knownLengths = [];
 
     /**
      * A list of lines being ignored due to error suppression comments.
      *
      * @var array
      */
-    public $ignoredLines = array();
+    public $ignoredLines = [];
 
 
     /**
@@ -150,7 +150,7 @@ abstract class Tokenizer
     {
         $currColumn = 1;
         $lineNumber = 1;
-        $eolLen     = (strlen($this->eolChar) * -1);
+        $eolLen     = strlen($this->eolChar);
         $ignoring   = null;
         $inTests    = defined('PHP_CODESNIFFER_IN_TESTS');
 
@@ -161,18 +161,18 @@ abstract class Tokenizer
 
         $checkAnnotations = $this->config->annotations;
 
-        $this->tokensWithTabs = array(
-                                 T_WHITESPACE               => true,
-                                 T_COMMENT                  => true,
-                                 T_DOC_COMMENT              => true,
-                                 T_DOC_COMMENT_WHITESPACE   => true,
-                                 T_DOC_COMMENT_STRING       => true,
-                                 T_CONSTANT_ENCAPSED_STRING => true,
-                                 T_DOUBLE_QUOTED_STRING     => true,
-                                 T_HEREDOC                  => true,
-                                 T_NOWDOC                   => true,
-                                 T_INLINE_HTML              => true,
-                                );
+        $this->tokensWithTabs = [
+            T_WHITESPACE               => true,
+            T_COMMENT                  => true,
+            T_DOC_COMMENT              => true,
+            T_DOC_COMMENT_WHITESPACE   => true,
+            T_DOC_COMMENT_STRING       => true,
+            T_CONSTANT_ENCAPSED_STRING => true,
+            T_DOUBLE_QUOTED_STRING     => true,
+            T_HEREDOC                  => true,
+            T_NOWDOC                   => true,
+            T_INLINE_HTML              => true,
+        ];
 
         $this->numTokens = count($this->tokens);
         for ($i = 0; $i < $this->numTokens; $i++) {
@@ -190,7 +190,11 @@ abstract class Tokenizer
                 // There are no tabs in this content, or we aren't replacing them.
                 if ($checkEncoding === true) {
                     // Not using the default encoding, so take a bit more care.
-                    $length = @iconv_strlen($this->tokens[$i]['content'], $this->config->encoding);
+                    $oldLevel = error_reporting();
+                    error_reporting(0);
+                    $length = iconv_strlen($this->tokens[$i]['content'], $this->config->encoding);
+                    error_reporting($oldLevel);
+
                     if ($length === false) {
                         // String contained invalid characters, so revert to default.
                         $length = strlen($this->tokens[$i]['content']);
@@ -215,7 +219,7 @@ abstract class Tokenizer
                 $currColumn = 1;
 
                 // Newline chars are not counted in the token length.
-                $this->tokens[$i]['length'] += $eolLen;
+                $this->tokens[$i]['length'] -= $eolLen;
             }
 
             if ($checkAnnotations === true
@@ -249,15 +253,15 @@ abstract class Tokenizer
                     if ($ignoring === null
                         && strpos($commentText, '@codingStandardsIgnoreStart') !== false
                     ) {
-                        $ignoring = array('all' => true);
+                        $ignoring = ['all' => true];
                         if ($ownLine === true) {
-                            $this->ignoredLines[$this->tokens[$i]['line']] = array('all' => true);
+                            $this->ignoredLines[$this->tokens[$i]['line']] = ['all' => true];
                         }
                     } else if ($ignoring !== null
                         && strpos($commentText, '@codingStandardsIgnoreEnd') !== false
                     ) {
                         if ($ownLine === true) {
-                            $this->ignoredLines[$this->tokens[$i]['line']] = array('all' => true);
+                            $this->ignoredLines[$this->tokens[$i]['line']] = ['all' => true];
                         } else {
                             $this->ignoredLines[$this->tokens[$i]['line']] = $ignoring;
                         }
@@ -266,9 +270,9 @@ abstract class Tokenizer
                     } else if ($ignoring === null
                         && strpos($commentText, '@codingStandardsIgnoreLine') !== false
                     ) {
-                        $ignoring = array('all' => true);
+                        $ignoring = ['all' => true];
                         if ($ownLine === true) {
-                            $this->ignoredLines[$this->tokens[$i]['line']]       = array('all' => true);
+                            $this->ignoredLines[$this->tokens[$i]['line']]       = ['all' => true];
                             $this->ignoredLines[($this->tokens[$i]['line'] + 1)] = $ignoring;
                         } else {
                             $this->ignoredLines[$this->tokens[$i]['line']] = $ignoring;
@@ -314,18 +318,18 @@ abstract class Tokenizer
                     } else if (substr($commentTextLower, 0, 13) === 'phpcs:disable') {
                         if ($ownLine === true) {
                             // Completely ignore the comment line.
-                            $this->ignoredLines[$this->tokens[$i]['line']] = array('all' => true);
+                            $this->ignoredLines[$this->tokens[$i]['line']] = ['all' => true];
                         }
 
                         if ($ignoring === null) {
-                            $ignoring = array();
+                            $ignoring = [];
                         }
 
-                        $disabledSniffs = array();
+                        $disabledSniffs = [];
 
                         $additionalText = substr($commentText, 14);
                         if ($additionalText === false) {
-                            $ignoring = array('all' => true);
+                            $ignoring = ['all' => true];
                         } else {
                             $parts = explode(',', substr($commentText, 13));
                             foreach ($parts as $sniffCode) {
@@ -341,7 +345,7 @@ abstract class Tokenizer
                     } else if ($ignoring !== null
                         && substr($commentTextLower, 0, 12) === 'phpcs:enable'
                     ) {
-                        $enabledSniffs = array();
+                        $enabledSniffs = [];
 
                         $additionalText = substr($commentText, 13);
                         if ($additionalText === false) {
@@ -363,7 +367,7 @@ abstract class Tokenizer
 
                         if ($ownLine === true) {
                             // Completely ignore the comment line.
-                            $this->ignoredLines[$this->tokens[$i]['line']] = array('all' => true);
+                            $this->ignoredLines[$this->tokens[$i]['line']] = ['all' => true];
                         } else {
                             // The comment is on the same line as the code it is ignoring,
                             // so respect the new ignore rules.
@@ -374,11 +378,11 @@ abstract class Tokenizer
                         $this->tokens[$i]['type']       = 'T_PHPCS_ENABLE';
                         $this->tokens[$i]['sniffCodes'] = $enabledSniffs;
                     } else if (substr($commentTextLower, 0, 12) === 'phpcs:ignore') {
-                        $ignoreRules = array();
+                        $ignoreRules = [];
 
                         $additionalText = substr($commentText, 13);
                         if ($additionalText === false) {
-                            $ignoreRules = array('all' => true);
+                            $ignoreRules = ['all' => true];
                         } else {
                             $parts = explode(',', substr($commentText, 13));
                             foreach ($parts as $sniffCode) {
@@ -397,7 +401,7 @@ abstract class Tokenizer
                         if ($ownLine === true) {
                             // Completely ignore the comment line, and set the folllowing
                             // line to include the ignore rules we've set.
-                            $this->ignoredLines[$this->tokens[$i]['line']]       = array('all' => true);
+                            $this->ignoredLines[$this->tokens[$i]['line']]       = ['all' => true];
                             $this->ignoredLines[($this->tokens[$i]['line'] + 1)] = $ignoreRules;
                         } else {
                             // The comment is on the same line as the code it is ignoring,
@@ -424,13 +428,14 @@ abstract class Tokenizer
      * is placed into an orig_content index and the new token length is also
      * set in the length index.
      *
-     * @param array  $token   The token to replace tabs inside.
-     * @param string $prefix  The character to use to represent the start of a tab.
-     * @param string $padding The character to use to represent the end of a tab.
+     * @param array  $token    The token to replace tabs inside.
+     * @param string $prefix   The character to use to represent the start of a tab.
+     * @param string $padding  The character to use to represent the end of a tab.
+     * @param int    $tabWidth The number of spaces each tab represents.
      *
      * @return void
      */
-    public function replaceTabsInToken(&$token, $prefix=' ', $padding=' ')
+    public function replaceTabsInToken(&$token, $prefix=' ', $padding=' ', $tabWidth=null)
     {
         $checkEncoding = false;
         if (function_exists('iconv_strlen') === true) {
@@ -438,19 +443,19 @@ abstract class Tokenizer
         }
 
         $currColumn = $token['column'];
-        $tabWidth   = $this->config->tabWidth;
-        if ($tabWidth === 0) {
-            $tabWidth = 1;
+        if ($tabWidth === null) {
+            $tabWidth = $this->config->tabWidth;
+            if ($tabWidth === 0) {
+                $tabWidth = 1;
+            }
         }
 
         if (str_replace("\t", '', $token['content']) === '') {
             // String only contains tabs, so we can shortcut the process.
             $numTabs = strlen($token['content']);
 
-            $newContent   = '';
             $firstTabSize = ($tabWidth - (($currColumn - 1) % $tabWidth));
             $length       = ($firstTabSize + ($tabWidth * ($numTabs - 1)));
-            $currColumn  += $length;
             $newContent   = $prefix.str_repeat($padding, ($length - 1));
         } else {
             // We need to determine the length of each tab.
@@ -466,7 +471,10 @@ abstract class Tokenizer
                     $newContent .= $content;
                     if ($checkEncoding === true) {
                         // Not using the default encoding, so take a bit more care.
-                        $contentLength = @iconv_strlen($content, $this->config->encoding);
+                        $oldLevel = error_reporting();
+                        error_reporting(0);
+                        $contentLength = iconv_strlen($content, $this->config->encoding);
+                        error_reporting($oldLevel);
                         if ($contentLength === false) {
                             // String contained invalid characters, so revert to default.
                             $contentLength = strlen($content);
@@ -525,11 +533,11 @@ abstract class Tokenizer
             echo "\t*** START TOKEN MAP ***".PHP_EOL;
         }
 
-        $squareOpeners   = array();
-        $curlyOpeners    = array();
+        $squareOpeners   = [];
+        $curlyOpeners    = [];
         $this->numTokens = count($this->tokens);
 
-        $openers   = array();
+        $openers   = [];
         $openOwner = null;
 
         for ($i = 0; $i < $this->numTokens; $i++) {
@@ -651,7 +659,7 @@ abstract class Tokenizer
      */
     private function createParenthesisNestingMap()
     {
-        $map = array();
+        $map = [];
         for ($i = 0; $i < $this->numTokens; $i++) {
             if (isset($this->tokens[$i]['parenthesis_opener']) === true
                 && $i === $this->tokens[$i]['parenthesis_opener']
@@ -846,10 +854,10 @@ abstract class Tokenizer
                     }
                 } else {
                     $scopeCloser = $i;
-                    $todo        = array(
-                                    $stackPtr,
-                                    $opener,
-                                   );
+                    $todo        = [
+                        $stackPtr,
+                        $opener,
+                    ];
 
                     if (PHP_CODESNIFFER_VERBOSITY > 1) {
                         $type       = $this->tokens[$stackPtr]['type'];
@@ -1091,12 +1099,12 @@ abstract class Tokenizer
                                 // brace is a string offset, or this brace is mid-way through
                                 // a new statement, it isn't a scope opener.
                                 $disallowed  = Util\Tokens::$assignmentTokens;
-                                $disallowed += array(
-                                                T_VARIABLE         => true,
-                                                T_OBJECT_OPERATOR  => true,
-                                                T_COMMA            => true,
-                                                T_OPEN_PARENTHESIS => true,
-                                               );
+                                $disallowed += [
+                                    T_VARIABLE         => true,
+                                    T_OBJECT_OPERATOR  => true,
+                                    T_COMMA            => true,
+                                    T_OPEN_PARENTHESIS => true,
+                                ];
 
                                 if (isset($disallowed[$this->tokens[$x]['code']]) === true) {
                                     if (PHP_CODESNIFFER_VERBOSITY > 1) {
@@ -1208,7 +1216,7 @@ abstract class Tokenizer
                             echo "=> Found (unexpected) scope closer for $stackPtr:$type".PHP_EOL;
                         }
 
-                        foreach (array($stackPtr, $opener) as $token) {
+                        foreach ([$stackPtr, $opener] as $token) {
                             $this->tokens[$token]['scope_condition'] = $stackPtr;
                             $this->tokens[$token]['scope_opener']    = $opener;
                             $this->tokens[$token]['scope_closer']    = $i;
@@ -1243,9 +1251,9 @@ abstract class Tokenizer
 
         $this->numTokens = count($this->tokens);
         $level           = 0;
-        $conditions      = array();
+        $conditions      = [];
         $lastOpener      = null;
-        $openers         = array();
+        $openers         = [];
 
         for ($i = 0; $i < $this->numTokens; $i++) {
             if (PHP_CODESNIFFER_VERBOSITY > 1) {
