@@ -23,7 +23,7 @@ class Config
      *
      * @var string
      */
-    const VERSION = '3.2.0';
+    const VERSION = '3.2.1';
 
     /**
      * Package stability; either stable, beta or alpha.
@@ -372,7 +372,18 @@ class Config
             || (Util\Common::isStdinATTY() === false
             && feof($handle) === false)
         ) {
-            $fileContents = stream_get_contents($handle);
+            $readStreams = [$handle];
+            $writeSteams = null;
+
+            $fileContents = '';
+            while (is_resource($handle) === true && feof($handle) === false) {
+                // Set a timeout of 200ms.
+                if (stream_select($readStreams, $writeSteams, $writeSteams, 0, 200000) === 0) {
+                    break;
+                }
+
+                $fileContents .= fgets($handle);
+            }
 
             if (trim($fileContents) !== '') {
                 $this->stdin        = true;
@@ -380,7 +391,7 @@ class Config
                 $this->overriddenDefaults['stdin']        = true;
                 $this->overriddenDefaults['stdinContent'] = true;
             }
-        }
+        }//end if
 
         fclose($handle);
 
