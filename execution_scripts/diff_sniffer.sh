@@ -4,7 +4,7 @@
 #
 # Args
 # -d Diff Only
-# -n Diff on not'staged files
+# -n Diff on not staged files
 # -s Diff on staged files
 # -c Diff against specific commit hash
 # -l Diff against last commit of specific branch
@@ -20,7 +20,7 @@ jsReportType=diff-full
 colors=--colors
 notStaged=0
 staged=0
-commitHex=''
+commitHex=""
 jsBuildRegex=\\bclient\/build
 jsMinRegex=\.min\.js$
 
@@ -44,10 +44,10 @@ usage() {
 # $3 commit hex hash
 executeDiffSniff() {
     diffLines=`GIT_EXTERNAL_DIFF=$gitExtDiff git diff $3 $2`
-    diffLinesOption=''
+    diffLinesOption=""
 
     if [[ ! -z $diffLines ]]; then
-        diffLinesOption='--diff-lines='$diffLines
+        diffLinesOption="--diff-lines="$diffLines
     fi
 
     case "$1" in
@@ -62,6 +62,21 @@ executeDiffSniff() {
             printf "\n"
             ;;
     esac
+}
+
+# Args
+# $1 element to find
+# $@ elements to be checked
+contains() {
+    param=$1
+    shift
+    array=("$@")
+
+    for elem in "${array[@]}"; do
+        [[ "$param" = "$elem" ]] && return 0
+    done
+
+    return 1
 }
 
 while getopts "dnsc:l:t:h" flag; do
@@ -96,16 +111,27 @@ done
 shift "$((OPTIND-1))"
 
 if [[ $notStaged -eq 1 || $staged -eq 1 ]]; then
-    gitDiff=''
+    gitDiff=""
 
     if [[ $staged -eq 1 ]]; then
         gitDiff=--cached
     fi
 
+    fileTypesToBeLinted=()
+
+    case "$fileType" in
+        php)
+            fileTypesToBeLinted=(php)
+            ;;
+        js)
+            fileTypesToBeLinted=(js jsx)
+            ;;
+    esac
+
     for file in $(git diff --name-only $gitDiff $commitHex); do
-        if [[ ${file##*.} == $fileType ]]
+        if contains ${file##*.} "${fileTypesToBeLinted[@]}"
         then
-            if [[ $fileType == 'js' && ( $file =~ $jsMinRegex || $file =~ $jsBuildRegex ) ]]
+            if [[ $fileType == "js" && ( $file =~ $jsMinRegex || $file =~ $jsBuildRegex ) ]]
             then
                 #Don't execute linters on minified or built js files
                 :
